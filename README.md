@@ -11,7 +11,13 @@ npm install
 cp .env.example .env        # then fill in the API keys
 ```
 
-**Prerequisites** (the dashboard tells you which one is missing):
+**Windows / Linux quickstart:** install Node 22 (nodejs.org) and git, then
+`git clone` → `npm install` → copy `.env.example` to `.env` and fill in the keys → `npm run worker`
+in one terminal and `npm run dev` in another. The worker installs **yt-dlp**, **whisper.cpp** and
+the **whisper model** by itself on first start (a few minutes; the dashboard shows the progress).
+Titles render through a bundled canvas there; on macOS they use CoreText.
+
+**Prerequisites** (the dashboard tells you which one is missing; the worker installs the first three itself):
 
 | Tool | Why | macOS | Windows / Linux |
 |---|---|---|---|
@@ -19,7 +25,7 @@ cp .env.example .env        # then fill in the API keys
 | `yt-dlp` | downloading links | `brew install yt-dlp` | `winget install yt-dlp` / `pip install yt-dlp` |
 | `whisper-cli` | transcription | `brew install whisper-cpp` | whisper.cpp release binary on PATH, or `WHISPER_BIN` |
 | whisper model | transcription | `curl -L --create-dirs -o ~/.cache/whisper-models/ggml-large-v3-turbo-q5_0.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin` | same path, or `WHISPER_MODEL` |
-| Xcode CLT | the title renderer + pane OCR (Swift/CoreText) | `xcode-select --install` | **not available — titles render on macOS only for now** |
+| Xcode CLT | CoreText title renderer + pane OCR (macOS only; other platforms use the bundled canvas renderer and skip OCR) | `xcode-select --install` | not needed |
 
 ffmpeg comes vendored (`ffmpeg-static`, the build with libass). `data/` is created on first run and is never
 committed — sources, proxies, renders and the SQLite database live there per machine. The

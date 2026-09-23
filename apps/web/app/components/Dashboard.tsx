@@ -15,7 +15,7 @@ type Source = {
 export default function Dashboard() {
   const [sources, setSources] = useState<Source[]>([]);
   const [jobs, setJobs] = useState<JobRow[]>([]);
-  const [worker, setWorker] = useState<{ alive: boolean; stale: boolean; missing: Array<{ tool: string; hint: string | null; what: string | null }> } | null>(null);
+  const [worker, setWorker] = useState<{ alive: boolean; stale: boolean; missing: Array<{ tool: string; hint: string | null; what: string | null }>; setup: { tool: string; message: string; percent: number | null; failed?: boolean } | null } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [clips, setClips] = useState<ClipRow[]>([]);
   const [showRejects, setShowRejects] = useState(false);
@@ -35,7 +35,7 @@ export default function Dashboard() {
   useEffect(() => { refresh(); }, [refresh]);
 
   // While a stream is processing or being deleted, keep the list current.
-  const busy = sources.some((s) => s.status === 'processing' || s.status === 'deleting');
+  const busy = sources.some((s) => s.status === 'processing' || s.status === 'deleting') || !!worker?.setup;
   useEffect(() => {
     if (!busy) return;
     const t = setInterval(refresh, 4000);
@@ -118,9 +118,16 @@ export default function Dashboard() {
 
       {/* This machine's setup problems, said plainly: a fresh clone showed "spawn yt-dlp ENOENT"
           five times and nothing else. The worker probes its tools at start and reports here. */}
-      {worker && (!worker.alive || worker.missing.length > 0) && (
+      {worker && (!worker.alive || worker.setup || worker.missing.length > 0) && (
         <div className="mt-6 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-[13px] text-fg-1">
-          {!worker.alive ? (
+          {worker.alive && worker.setup ? (
+            <div>
+              {worker.setup.failed ? 'Setup failed: ' : 'Setting up this machine — '}
+              <span className="font-medium">{worker.setup.tool}</span>: {worker.setup.message}
+              {worker.setup.percent != null && !worker.setup.failed && <span className="tabular"> · {worker.setup.percent}%</span>}
+              {!worker.setup.failed && <span className="text-fg-3"> (one-time; links will work as soon as this finishes)</span>}
+            </div>
+          ) : !worker.alive ? (
             <div>The worker isn&apos;t running on this machine — nothing will download, transcribe or render until it is. Start it in a terminal: <code className="rounded bg-white/10 px-1.5 py-0.5">npm run worker</code></div>
           ) : (
             <ul className="space-y-1">

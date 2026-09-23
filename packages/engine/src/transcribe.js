@@ -17,10 +17,10 @@ const path = require('path');
 const os = require('os');
 const { spawn } = require('child_process');
 
-const WHISPER_BIN = process.env.WHISPER_BIN || 'whisper-cli';
-const DEFAULT_MODEL =
-  process.env.WHISPER_MODEL ||
-  path.join(os.homedir(), '.cache', 'whisper-models', 'ggml-large-v3-turbo-q5_0.bin');
+const tools = require('./tools');
+// Resolved at call time (see tools.js): PATH, an env override, or the copy the worker installed.
+const WHISPER_BIN = { toString() { return tools.whisperBin(); } };
+const DEFAULT_MODEL = tools.DEFAULT_MODEL;
 
 /** New segment when the speaker lands a sentence, pauses, or runs long. */
 const SENTENCE_END = /[.!?]["')\]]?$/;
@@ -29,7 +29,7 @@ const SEGMENT_MAX_WORDS = 18;
 
 function runWhisper(args, { onProgress } = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(WHISPER_BIN, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(String(WHISPER_BIN), args, { stdio: ['ignore', 'pipe', 'pipe'] });
     let stderr = '';
     child.stdout.on('data', () => {});
     child.stderr.on('data', (d) => {
@@ -99,8 +99,8 @@ async function transcribe(audioPath, { model = DEFAULT_MODEL, language = 'en', t
   }
   if (!fs.existsSync(model)) {
     throw new Error(
-      `Whisper model not found at ${model}. Download one, e.g.\n` +
-      `  curl -L -o "${model}" https://huggingface.co/ggerganov/whisper.cpp/resolve/main/${path.basename(model)}`
+      `Whisper model not found at ${model}. Restart the worker — it downloads the model by itself — or fetch it:\n` +
+      `  curl -L --create-dirs -o "${model}" https://huggingface.co/ggerganov/whisper.cpp/resolve/main/${path.basename(model)}`
     );
   }
 

@@ -111,16 +111,17 @@ function onPath(bin) {
 function checkTools() {
   const platform = process.platform;
   const hints = HINTS[platform] || HINTS.linux;
-  const ytdlpBin = process.env.YTDLP_BIN || 'yt-dlp';
-  const whisperBin = process.env.WHISPER_BIN || 'whisper-cli';
-  const model = process.env.WHISPER_MODEL
-    || path.join(os.homedir(), '.cache', 'whisper-models', 'ggml-large-v3-turbo-q5_0.bin');
+  const tools = require('./tools');
+  const ytdlpBin = tools.resolveYtdlp();
+  const whisperBin = tools.resolveWhisper();
+  const model = tools.DEFAULT_MODEL;
   return {
     platform,
-    ytdlp: { bin: ytdlpBin, ok: onPath(ytdlpBin), hint: hints.ytdlp, what: 'downloading YouTube / Instagram links (local files still work)' },
-    whisper: { bin: whisperBin, ok: onPath(whisperBin), hint: hints.whisper, what: 'transcription — nothing works without it' },
+    ytdlp: { bin: ytdlpBin || 'yt-dlp', ok: !!ytdlpBin, hint: hints.ytdlp, what: 'downloading YouTube / Instagram links (local files still work)' },
+    whisper: { bin: whisperBin || 'whisper-cli', ok: !!whisperBin, hint: hints.whisper, what: 'transcription — nothing works without it' },
     model: { path: model, ok: fs.existsSync(model), hint: modelHint(model), what: 'the whisper model file' },
-    titlePlate: { ok: platform === 'darwin', what: 'titles are drawn by a Swift/CoreText helper — macOS only for now' },
+    // Titles render through CoreText on macOS and through a bundled canvas everywhere else.
+    titlePlate: { ok: true, what: 'title rendering' },
   };
 }
 
@@ -143,11 +144,10 @@ function assertCapabilities({ bin, verbose = false } = {}) {
   const tools = checkTools();
   for (const key of ['whisper', 'model']) {
     if (!tools[key].ok) {
-      throw new Error(`${key === 'model' ? 'whisper model' : 'whisper-cli'} not found (${tools[key].path || tools[key].bin}) — it is ${tools[key].what}.\n  Install: ${tools[key].hint}`);
+      throw new Error(`${key === 'model' ? 'whisper model' : 'whisper-cli'} not found (${tools[key].path || tools[key].bin}) — it is ${tools[key].what}.\n  The worker installs it on start; if that failed, install it yourself: ${tools[key].hint}`);
     }
   }
   if (!tools.ytdlp.ok) console.warn(`[capabilities] WARNING: yt-dlp not found — ${tools.ytdlp.what}. Install: ${tools.ytdlp.hint}`);
-  if (!tools.titlePlate.ok) console.warn(`[capabilities] WARNING: ${tools.titlePlate.what}`);
   return { ...r, tools };
 }
 

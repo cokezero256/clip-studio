@@ -79,6 +79,7 @@ function acquireLock() {
   fs.writeFileSync(path.join(DATA_DIR, 'worker.status.json'), JSON.stringify({
     pid: process.pid, startedAt: new Date().toISOString(), host: os.hostname(),
     capabilities: (() => { try { return require('@clip-studio/engine/src/capabilities').checkTools(); } catch { return null; } })(),
+    setup: null,
   }));
   const release = () => { try { if (fs.readFileSync(lockPath, 'utf-8').trim() === String(process.pid)) fs.unlinkSync(lockPath); } catch {} };
   process.on('exit', release);
@@ -696,6 +697,34 @@ async function loop() {
   const reaped = db.reapStaleJobs();
   if (reaped) console.log(`[worker] requeued ${reaped} stale job(s) from a previous run`);
 
+  // Tools first: a fresh machine has no yt-dlp, no whisper, no model. The worker fetches
+  // them itself and reports progress through worker.status.json so the dashboard can say
+  // "installing yt-dlp… 40%" instead of failing the first job with ENOENT.
+  const statusPath = path.join(DATA_DIR, 'worker.status.json');
+  const patchStatus = (patch) => {
+    try {
+      const cur = JSON.parse(fs.readFileSync(statusPath, 'utf-8'));
+      fs.writeFileSync(statusPath, JSON.stringify({ ...cur, ...patch }));
+    } catch { /* status is best effort */ }
+  };
+  try {
+    const { ensureTools } = require('@clip-studio/engine/src/tools');
+    let lastLine = '';
+    const r = await ensureTools({
+      log: (m) => console.log(`[setup] ${m}`),
+      onProgress: (p) => {
+        patchStatus({ setup: p });
+        const line = `[setup] ${p.tool}: ${p.message}${p.percent != null ? ` ${p.percent}%` : ''}`;
+        if (line !== lastLine && (p.percent == null || p.percent % 10 === 0 || p.percent === 100)) { console.log(line); lastLine = line; }
+      },
+    });
+    for (const w of r.warnings) console.warn(`[setup] WARNING: ${w}`);
+    patchStatus({ setup: null, capabilities: require('@clip-studio/engine/src/capabilities').checkTools() });
+  } catch (err) {
+    patchStatus({ setup: { tool: 'setup', message: err.message, percent: null, failed: true } });
+    console.error(`[worker] FATAL: ${err.message}`);
+    process.exit(1);
+  }
   try {
     assertCapabilities({ verbose: true });
   } catch (err) {

@@ -760,6 +760,17 @@ console.log('\ncaption timing — words snap to the voice');
     assert.deepEqual([t2.doc.cuts[0].start, t2.doc.cuts[0].end], [101, 103]);
   });
 
+  t('tools: release assets are chosen per platform and whisper has none for macOS', () => {
+    const tools = require('./tools');
+    assert.equal(tools.ytdlpAsset('win32'), 'yt-dlp.exe');
+    assert.equal(tools.ytdlpAsset('darwin'), 'yt-dlp_macos');
+    assert.equal(tools.ytdlpAsset('linux'), 'yt-dlp_linux');
+    assert.equal(tools.whisperAsset('win32', 'x64'), 'whisper-bin-x64.zip');
+    assert.equal(tools.whisperAsset('win32', 'arm64'), 'whisper-bin-win-cpu-arm64.zip');
+    assert.equal(tools.whisperAsset('linux', 'x64'), 'whisper-bin-ubuntu-x64.tar.gz');
+    assert.equal(tools.whisperAsset('darwin', 'arm64'), null);
+  });
+
   t('re-aligning an aligned transcript gives the same result', () => {
     const v = model(frames([[1, 1], [0, 0.6], [1, 0.6]]));
     const input = [{ word: 'clipping', start: 0.4, end: 1.0 }, { word: 'start', start: 1.0, end: 2.2 }];

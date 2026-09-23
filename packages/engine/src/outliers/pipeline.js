@@ -57,8 +57,15 @@ function extractFrames(videoPath, dir) {
     .map((f) => path.join(dir, f));
 }
 
+let ocrWarned = false;
 function ocrFrames(files) {
   if (!files.length) return [];
+  // The OCR helper is Swift/Vision — macOS only. Elsewhere the burned-in titles are simply
+  // not read; classification still runs on the frames themselves.
+  if (process.platform !== 'darwin' || !fs.existsSync(OCR_BIN)) {
+    if (!ocrWarned) { ocrWarned = true; console.warn('[outliers] frame OCR helper unavailable on this platform — skipping title reads'); }
+    return files.map(() => ({ text: '' }));
+  }
   const out = execFileSync(OCR_BIN, files, { encoding: 'utf8', maxBuffer: 1e8 });
   return JSON.parse(out);
 }

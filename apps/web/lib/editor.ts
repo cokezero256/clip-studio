@@ -198,9 +198,10 @@ export function workerStatus() {
   let pid: number | null = null;
   let startedAt: string | null = null;
   let capabilities: Record<string, { ok: boolean; hint?: string; what?: string; bin?: string; path?: string }> | null = null;
+  let setup: { tool: string; message: string; percent: number | null; failed?: boolean } | null = null;
   try {
     const st = JSON.parse(fs.readFileSync(statusPath, 'utf-8'));
-    pid = st.pid; startedAt = st.startedAt; capabilities = st.capabilities ?? null;
+    pid = st.pid; startedAt = st.startedAt; capabilities = st.capabilities ?? null; setup = st.setup ?? null;
   } catch {
     try { pid = parseInt(fs.readFileSync(lockPath, 'utf-8').trim(), 10); } catch { /* none */ }
   }
@@ -220,7 +221,7 @@ export function workerStatus() {
     ? Object.entries(capabilities).filter(([k, v]) => k !== 'platform' && v && typeof v === 'object' && v.ok === false)
       .map(([k, v]) => ({ tool: k, hint: v.hint ?? null, what: v.what ?? null }))
     : [];
-  return { alive, pid, startedAt, stale, missing };
+  return { alive, pid, startedAt, stale, missing, setup: alive ? setup : null };
 }
 
 function newestMtime(dir: string): number {

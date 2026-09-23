@@ -21,7 +21,7 @@ const { seekPreroll, captionClipStart } = require('../clip-renderer');
  * Region boxes are normalised precisely so they can be applied to any resolution.
  */
 function probeDimensions(videoPath) {
-  const out = execFileSync('ffprobe', [
+  const out = execFileSync(require('../ffmpeg').FFPROBE, [
     '-v', 'error', '-select_streams', 'v:0',
     '-show_entries', 'stream=width,height', '-of', 'csv=p=0', videoPath,
   ], { encoding: 'utf8' }).trim();

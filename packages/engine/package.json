@@ -4,9 +4,12 @@
   "private": true,
   "description": "Render engine: ffmpeg composition, ASS captions, layouts, silence/stutter detection, FCPXML. Lifted from VIDEO EDITOR/lib.",
   "main": "src/index.js",
-  "scripts": { "test": "node src/__smoke.js && node src/__tests.js" },
+  "scripts": {
+    "test": "node src/__smoke.js && node src/__tests.js"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@napi-rs/canvas": "^1.0.9",
     "dotenv": "^16.4.0",
     "ffmpeg-static": "^5.3.0",
     "ffprobe-static": "^3.1.0",

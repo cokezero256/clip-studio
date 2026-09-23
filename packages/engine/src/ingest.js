@@ -15,7 +15,12 @@ const path = require('path');
 const { spawn, execFileSync } = require('child_process');
 const crypto = require('crypto');
 
-const YTDLP_BIN = process.env.YTDLP_BIN || 'yt-dlp';
+const tools = require('./tools');
+// Resolved at call time: the worker may have downloaded a copy after this module loaded.
+const ytdlp = () => tools.ytdlpBin();
+// yt-dlp merges video+audio with ffmpeg; on a fresh Windows machine only our vendored one exists.
+const FFMPEG_DIR = (() => { try { return path.dirname(require('ffmpeg-static')); } catch { return null; } })();
+const ffmpegLocation = () => (FFMPEG_DIR ? ['--ffmpeg-location', FFMPEG_DIR] : []);
 
 /**
  * yt-dlp extraction strategies, tried in order.
@@ -64,7 +69,7 @@ async function runYtdlp(baseArgs, { onLine, verify, preferQuality = false } = {}
   const errors = [];
   for (const strat of strategyOrder({ preferQuality })) {
     try {
-      await run(YTDLP_BIN, [...strat.args, ...baseArgs], { onLine });
+      await run(ytdlp(), [...strat.args, ...ffmpegLocation(), ...baseArgs], { onLine });
       if (verify && !verify()) throw new Error('command succeeded but produced no output file');
       preferredStrategy = strat.name;
       return strat.name;
@@ -73,7 +78,7 @@ async function runYtdlp(baseArgs, { onLine, verify, preferQuality = false } = {}
       if (err && (err.code === 'ENOENT' || /spawn .*ENOENT/.test(String(err.message)))) {
         const hint = process.platform === 'darwin' ? 'brew install yt-dlp'
           : process.platform === 'win32' ? 'winget install yt-dlp  (or: pip install yt-dlp)' : 'pip install yt-dlp';
-        throw new Error(`yt-dlp is not installed on this machine (looked for "${YTDLP_BIN}"). Install it — ${hint} — then restart the worker. Local files still work without it.`);
+        throw new Error(`yt-dlp is not installed on this machine (looked for "${ytdlp()}"). Restart the worker — it installs yt-dlp by itself — or install it: ${hint}. Local files still work without it.`);
       }
       errors.push(`${strat.name}: ${String(err.message).split('\n').pop().slice(0, 160)}`);
     }
@@ -168,7 +173,7 @@ async function probeUrl(url) {
   const errors = [];
   for (const strat of strategyOrder()) {
     try {
-      const r = await run(YTDLP_BIN, [...strat.args, '--no-warnings', '--dump-json', '--no-playlist', url]);
+      const r = await run(ytdlp(), [...strat.args, '--no-warnings', '--dump-json', '--no-playlist', url]);
       if (r.stdout.trim()) { stdout = r.stdout; preferredStrategy = strat.name; break; }
     } catch (err) {
       errors.push(`${strat.name}: ${String(err.message).split('\n').pop().slice(0, 140)}`);
@@ -267,7 +272,7 @@ async function fetchVideo(url, outDir, { onProgress, maxHeight = 1080 } = {}) {
   // to the clients that still allow downloads, and silently upscaling a 360p source into a
   // 1080x1920 clip is the kind of quality loss nobody notices until the client does.
   try {
-    const dims = execFileSync('ffprobe', [
+    const dims = execFileSync(require('./ffmpeg').FFPROBE, [
       '-v', 'error', '-select_streams', 'v:0',
       '-show_entries', 'stream=width,height', '-of', 'csv=p=0', out,
     ], { encoding: 'utf8' }).trim().split(',').map(Number);

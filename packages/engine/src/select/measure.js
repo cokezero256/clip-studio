@@ -106,7 +106,7 @@ async function verifyRenderedFile(mp4Path, {
 
   const { execFileSync } = require('child_process');
   const duration = parseFloat(
-    execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration',
+    execFileSync(require('../ffmpeg').FFPROBE, ['-v', 'error', '-show_entries', 'format=duration',
       '-of', 'default=nw=1:nk=1', mp4Path], { encoding: 'utf8' }).trim()
   );
 
@@ -157,7 +157,7 @@ async function trimTrailingSilence(mp4Path, { maxTailMs = 250, noiseDb = -32 } =
   const FFMPEG = process.env.FFMPEG_BIN || require('ffmpeg-static');
 
   const duration = parseFloat(
-    execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration',
+    execFileSync(require('../ffmpeg').FFPROBE, ['-v', 'error', '-show_entries', 'format=duration',
       '-of', 'default=nw=1:nk=1', mp4Path], { encoding: 'utf8' }).trim()
   );
 
