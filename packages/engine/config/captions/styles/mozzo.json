@@ -1,0 +1,16 @@
+{
+  "id": "mozzo",
+  "name": "Mozzo Brand",
+  "font_family": "Helvetica",
+  "font_file": null,
+  "font_size_px": 80,
+  "primary_color": "#FFFFFF",
+  "highlight_color": "#F59E0B",
+  "outline_color": "#000000",
+  "outline_width_px": 4,
+  "shadow": { "color": "#000000", "blur_px": 6, "offset_y_px": 2 },
+  "case": "as-spoken",
+  "y_offset_pct": 0.72,
+  "animation": "pop",
+  "_notes": "Default branding preset. Drop your Mozzo brand font into config/captions/fonts/<filename> and set font_file to the basename, then update font_family to the PostScript name of that font."
+}

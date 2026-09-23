@@ -1,0 +1,52 @@
+{
+  "id": "split-spec-v1",
+  "name": "Split-Screen Spec v1 (Inter + mint)",
+  "font_family": "Inter",
+  "font_file": "Inter-Variable.ttf",
+  "font_size_px": 56,
+  "bold": 800,
+  "primary_color": "#FFFFFF",
+  "highlight_color": "#FFFFFF",
+  "outline_color": "#000000",
+  "outline_width_px": 6,
+  "shadow": { "color": "#000000", "blur_px": 8, "offset_y_px": 4, "edge_blur": 2 },
+  "case": "as-spoken",
+  "y_offset_pct": 0.5417,
+  "animation": "reveal",
+  "anchor": "bottom",
+  "stack_enabled": false,
+  "letter_spacing_px": -1,
+  "header": {
+    "font_family": "Inter",
+    "font_file": "Inter-Variable.ttf",
+    "font_size_px": 64,
+    "bold": 700,
+    "color": "#FFFFFF"
+  },
+  "variants": {
+    "accent": {
+      "font_family": "Inter",
+      "font_file": "Inter-Variable.ttf",
+      "color": "#3DDBA9",
+      "size_multiplier": 1.0,
+      "bold": 800,
+      "outline_width_px": 6
+    },
+    "script": {
+      "font_family": "Inter",
+      "font_file": "Inter-Variable.ttf",
+      "color": "#3DDBA9",
+      "size_multiplier": 1.0,
+      "bold": 800,
+      "outline_width_px": 6
+    },
+    "large": {
+      "font_family": "Inter",
+      "font_file": "Inter-Variable.ttf",
+      "color": "#3DDBA9",
+      "size_multiplier": 1.0,
+      "bold": 800,
+      "outline_width_px": 6
+    }
+  }
+}

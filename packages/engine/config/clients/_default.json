@@ -1,0 +1,18 @@
+{
+  "language": "en",
+  "silence_threshold_seconds": 0.6,
+  "edge_silence_threshold_seconds": 0.4,
+  "mid_silence_threshold_seconds": 0.5,
+  "filler_words": ["um", "uh", "like", "you know", "basically", "so", "kind of", "sort of", "I mean"],
+  "never_cut_words": [],
+  "j_cut_ms": 200,
+  "l_cut_ms": 0,
+  "min_keep_segment_seconds": 1.5,
+  "no_music_bed": true,
+  "style_guide": "Tight, conversational pacing. Keep natural pauses under 1 second. Cut filler-word sentence-starters. Preserve emphatic repetition that is clearly rhetorical.",
+  "model": "haiku",
+  "two_pass": true,
+  "auto_apply_confidence": 0.85,
+  "suggest_confidence": 0.6,
+  "max_cut_span_seconds": 8
+}

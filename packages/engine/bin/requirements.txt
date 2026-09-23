@@ -1,0 +1,4 @@
+# OpenCV ships Haar cascade XML files via cv2.data.haarcascades — no extra model
+# download needed. We use the frontal-face cascade for speaker detection.
+opencv-python>=4.10.0
+numpy>=1.26.0

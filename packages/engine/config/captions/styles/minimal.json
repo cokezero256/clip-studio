@@ -1,0 +1,15 @@
+{
+  "id": "minimal",
+  "name": "Minimal",
+  "font_family": "Helvetica",
+  "font_file": null,
+  "font_size_px": 56,
+  "primary_color": "#FFFFFF",
+  "highlight_color": "#FFFFFF",
+  "outline_color": "#000000",
+  "outline_width_px": 0,
+  "shadow": { "color": "#000000", "blur_px": 10, "offset_y_px": 4 },
+  "case": "as-spoken",
+  "y_offset_pct": 0.85,
+  "animation": "none"
+}

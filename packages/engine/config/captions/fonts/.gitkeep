@@ -1,0 +1,3 @@
+# Drop .ttf or .otf brand font files here.
+# The caption renderer will find them automatically via ffmpeg's fontsdir option.
+# Point your style preset's font_file at the basename, e.g. "MozzoSans-Bold.ttf".

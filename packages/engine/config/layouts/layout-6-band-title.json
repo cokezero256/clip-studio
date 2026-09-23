@@ -1,0 +1,37 @@
+{
+  "id": "layout-6",
+  "name": "9:16 Band + title (rp.profits style)",
+  "aspect": "9:16",
+  "composition": "band",
+  "canvas": { "width": 1080, "height": 1920 },
+  "background": "#000000",
+  "variants": {
+    "band-title-top": {
+      "videoY": 700,
+      "titleY": 470,
+      "captionY": 1420,
+      "label": "Title above, video centred"
+    },
+    "band-title-tight": {
+      "videoY": 560,
+      "titleY": 350,
+      "captionY": 1300,
+      "label": "Title high, video higher"
+    },
+    "band-title-low": {
+      "videoY": 880,
+      "titleY": 640,
+      "captionY": 1620,
+      "label": "Title mid, video low"
+    },
+    "band-no-title": {
+      "videoY": 656,
+      "titleY": null,
+      "captionY": 1400,
+      "label": "Video centred, no title"
+    }
+  },
+  "title":   { "an": 5, "x": 540, "fontSize": 66, "bord": 0, "shad": 0 },
+  "caption": { "an": 2, "x": 540, "fontSize": 84, "bord": 0 },
+  "notes": "Keeps the source 16:9 frame WHOLE — including any webcam inset it already has — and sets it as a band on a black canvas, with the title plate in the space above. This is the rp.profits treatment: deliberate negative space rather than a filled frame. A 1080-wide 16:9 band is 608px tall, so videoY is the band's top edge on the 1920 canvas."
+}

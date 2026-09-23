@@ -1,0 +1,37 @@
+{
+  "id": "sequel-viral",
+  "name": "Sequel Viral (word-by-word, boxed title)",
+  "font_family": "Sequel Sans Black Body",
+  "font_file": "Sequel Sans Black Body.ttf",
+  "font_size_px": 96,
+  "bold": true,
+  "primary_color": "#FFFFFF",
+  "highlight_color": "#FFFFFF",
+  "outline_color": "#000000",
+  "outline_width_px": 0,
+  "shadow": { "color": "#000000", "offset_y_px": 5, "edge_blur": 9, "opacity": 0.55 },
+  "case": "as-spoken",
+  "y_offset_pct": 0.60,
+  "animation": "reveal",
+  "anchor": "bottom",
+  "stack_enabled": false,
+  "line_spacing_px": 14,
+  "letter_spacing_px": 0,
+  "header": {
+    "font_family": "Sequel Sans Bold Head",
+    "font_size_px": 64,
+    "bold": true,
+    "color": "#000000",
+    "box": {
+      "enabled": true,
+      "fill": "#FFFFFF",
+      "text_color": "#111111",
+      "radius": 22
+    }
+  },
+  "variants": {
+    "accent": { "font_family": "Sequel Sans Black Body", "font_file": "Sequel Sans Black Body.ttf", "color": "#EC0B7A", "size_multiplier": 1.0, "italic": false, "bold": true, "outline_width_px": 0 },
+    "script": { "font_family": "Sequel Sans Black Body", "font_file": "Sequel Sans Black Body.ttf", "color": "#EC0B7A", "size_multiplier": 1.0, "italic": false, "bold": true, "outline_width_px": 0 },
+    "large":  { "font_family": "Sequel Sans Black Body", "font_file": "Sequel Sans Black Body.ttf", "color": "#FFFFFF", "size_multiplier": 1.3, "italic": false, "bold": true, "outline_width_px": 0 }
+  }
+}

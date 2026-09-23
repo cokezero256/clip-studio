@@ -1,0 +1,25 @@
+{
+  "id": "open-sans-viral",
+  "name": "Open Sans Viral (word-by-word)",
+  "font_family": "Open Sans ExtraBold",
+  "font_file": "OpenSans-ExtraBold.ttf",
+  "font_size_px": 72,
+  "bold": true,
+  "primary_color": "#FFFFFF",
+  "highlight_color": "#FFFFFF",
+  "outline_color": "#000000",
+  "outline_width_px": 0,
+  "shadow": { "color": "#000000", "offset_y_px": 4, "edge_blur": 7, "opacity": 0.5 },
+  "case": "as-spoken",
+  "y_offset_pct": 0.60,
+  "animation": "reveal",
+  "anchor": "bottom",
+  "stack_enabled": false,
+  "line_spacing_px": 14,
+  "letter_spacing_px": 1,
+  "variants": {
+    "accent": { "font_family": "Open Sans ExtraBold", "font_file": "OpenSans-ExtraBold.ttf", "color": "#EC0B7A", "size_multiplier": 1.0, "italic": false, "bold": true, "outline_width_px": 0 },
+    "script": { "font_family": "Open Sans ExtraBold", "font_file": "OpenSans-ExtraBold.ttf", "color": "#EC0B7A", "size_multiplier": 1.0, "italic": false, "bold": true, "outline_width_px": 0 },
+    "large":  { "font_family": "Open Sans ExtraBold", "font_file": "OpenSans-ExtraBold.ttf", "color": "#FFFFFF", "size_multiplier": 1.35, "italic": false, "bold": true, "outline_width_px": 0 }
+  }
+}

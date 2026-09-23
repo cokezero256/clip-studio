@@ -1,0 +1,30 @@
+# Clip Studio — what never goes to GitHub.
+# Runtime data: downloaded streams, proxies, renders, the outlier corpus, the SQLite DB.
+data/*
+!data/.gitkeep
+*.partial.mp4
+*.env.bin
+
+# Secrets (copy .env.example → .env and fill it in).
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output.
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Built on this machine from packages/engine/bin/src (title-plate.js rebuilds it with swiftc).
+packages/engine/bin/title-plate
+
+
+# OS / editor noise.
+.DS_Store
+*.log
+
+# Apple's Helvetica is not redistributable; on a Mac libass finds the system copy, and the
+# current style (sequel-viral) does not use it.
+packages/engine/config/captions/fonts/Helvetica.ttc

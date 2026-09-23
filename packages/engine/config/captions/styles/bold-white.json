@@ -1,0 +1,15 @@
+{
+  "id": "bold-white",
+  "name": "Bold White (Submagic-style)",
+  "font_family": "Helvetica Bold",
+  "font_file": null,
+  "font_size_px": 76,
+  "primary_color": "#FFFFFF",
+  "highlight_color": "#FFD60A",
+  "outline_color": "#000000",
+  "outline_width_px": 5,
+  "shadow": { "color": "#000000", "blur_px": 8, "offset_y_px": 3 },
+  "case": "as-spoken",
+  "y_offset_pct": 0.72,
+  "animation": "pop"
+}

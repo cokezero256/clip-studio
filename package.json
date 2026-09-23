@@ -1,0 +1,15 @@
+{
+  "name": "clip-studio",
+  "private": true,
+  "version": "2.0.0",
+  "description": "Mozzo Media clipping app 2.0 — link in, client-ready short-form clips out.",
+  "workspaces": ["packages/*", "apps/*"],
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "npm run dev --workspace=@clip-studio/web",
+    "worker": "npm run start --workspace=@clip-studio/worker",
+    "db:push": "npm run push --workspace=@clip-studio/db",
+    "db:studio": "npm run studio --workspace=@clip-studio/db",
+    "test": "npm run test --workspaces --if-present"
+  }
+}

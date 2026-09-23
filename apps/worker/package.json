@@ -1,0 +1,11 @@
+{
+  "name": "@clip-studio/worker",
+  "version": "2.0.0",
+  "private": true,
+  "main": "src/main.js",
+  "scripts": { "start": "node src/main.js", "dev": "node --watch src/main.js" },
+  "dependencies": {
+    "@clip-studio/db": "*",
+    "@clip-studio/engine": "*"
+  }
+}

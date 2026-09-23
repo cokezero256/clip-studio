@@ -1,0 +1,12 @@
+{
+  "_why": "Fonts the editor offers. Each one was MEASURED to resolve in CoreText from its registered file (title plates) and ships as a file the browser preview loads via @font-face, so preview and export use the same face. Inter is absent on purpose: its bold weights are named instances of a variable font and CoreText silently falls back to the system font for them.",
+  "fonts": [
+    { "name": "Sequel Sans Bold Head",  "label": "Sequel Head",       "file": "Sequel Sans Bold Head.ttf",  "roles": ["title", "caption"] },
+    { "name": "Sequel Sans Black Body", "label": "Sequel Black",      "file": "Sequel Sans Black Body.ttf", "roles": ["title", "caption"] },
+    { "name": "Sequel Sans Bold Body",  "label": "Sequel Bold",       "file": "Sequel Sans Bold Body.ttf",  "roles": ["title", "caption"] },
+    { "name": "Open Sans ExtraBold",    "label": "Open Sans ExtraBold","file": "OpenSans-ExtraBold.ttf",    "roles": ["title", "caption"] },
+    { "name": "Open Sans Bold",         "label": "Open Sans Bold",    "file": "OpenSans-Bold.ttf",          "roles": ["title", "caption"] },
+    { "name": "DM Serif Display",       "label": "DM Serif",          "file": "DMSerifDisplay-Regular.ttf", "roles": ["title"] },
+    { "name": "Vartigo",                "label": "Vartigo",           "file": "Vartigo.otf",                "roles": ["title"] }
+  ]
+}

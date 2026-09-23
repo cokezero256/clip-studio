@@ -1,0 +1,91 @@
+{
+  "id": "layout-5",
+  "name": "9:16 Re-composed (camera + screen)",
+  "aspect": "9:16",
+  "composition": "recompose",
+  "canvas": {
+    "width": 1080,
+    "height": 1920
+  },
+  "background": "#000000",
+  "paneOrder": "screen-top",
+  "bands": {
+    "screen-top": {
+      "screen": {
+        "y": 0,
+        "height": 900
+      },
+      "camera": {
+        "y": 900,
+        "height": 1020
+      }
+    },
+    "camera-top": {
+      "camera": {
+        "y": 0,
+        "height": 760
+      },
+      "screen": {
+        "y": 760,
+        "height": 1160
+      }
+    },
+    "screen-big": {
+      "screen": {
+        "y": 0,
+        "height": 1240
+      },
+      "camera": {
+        "y": 1240,
+        "height": 680
+      }
+    },
+    "camera-big": {
+      "camera": {
+        "y": 0,
+        "height": 1100
+      },
+      "screen": {
+        "y": 1100,
+        "height": 820
+      }
+    }
+  },
+  "title": {
+    "an": 5,
+    "atSeam": true,
+    "fontSize": 62,
+    "bord": 0,
+    "shad": 0
+  },
+  "caption": {
+    "an": 2,
+    "x": 540,
+    "y": 1720,
+    "fontSize": 96,
+    "bord": 0
+  },
+  "notes": "For a single 16:9 source holding BOTH a webcam and a screen-share. paneOrder picks the arrangement: stacked bands (screen-top / camera-top / screen-big / camera-big) or a full-bleed base with an inset (screen-full-pip-br / -bl / screen-only / camera-only). rp.profits cuts chart-over-trader; pjtradesnq cuts trader-over-chart; both exist, so this is a setting rather than a constant.",
+  "overlayModes": {
+    "screen-full-pip-br": {
+      "base": "screen",
+      "inset": "camera",
+      "corner": "bottom-right",
+      "insetWidth": 0.38
+    },
+    "screen-full-pip-bl": {
+      "base": "screen",
+      "inset": "camera",
+      "corner": "bottom-left",
+      "insetWidth": 0.38
+    },
+    "screen-only": {
+      "base": "screen",
+      "inset": null
+    },
+    "camera-only": {
+      "base": "camera",
+      "inset": null
+    }
+  }
+}

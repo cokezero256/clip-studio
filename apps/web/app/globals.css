@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+/*
+ * Clip Studio theme — dark canvas, pink accent.
+ *
+ * The brand doc specifies pink #EC0B7A as --accent and mint #3DDBA9 as --success. Those
+ * are different jobs, so they stay different here: pink is every interactive affordance,
+ * mint means "this passed" and nothing else. On a screen full of pass/fail gate results
+ * that distinction is doing real work.
+ */
+:root {
+  --bg-1: #0A0A0B;
+  --bg-2: #121214;
+  --bg-3: #1A1A1E;
+  --bg-4: #222228;
+  --fg-1: #F5F5F7;
+  --fg-2: #A1A1AA;
+  --fg-3: #71717A;
+  --line: #27272A;
+
+  --accent: #EC0B7A;
+  --accent-hover: #FF2A93;
+  --accent-soft: rgba(236, 11, 122, 0.12);
+
+  --success: #3DDBA9;
+  --warning: #F5A623;
+  --error: #EF4444;
+  --info: #60A5FA;
+}
+
+@theme inline {
+  --color-bg-1: var(--bg-1);
+  --color-bg-2: var(--bg-2);
+  --color-bg-3: var(--bg-3);
+  --color-bg-4: var(--bg-4);
+  --color-fg-1: var(--fg-1);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+}
+
+/*
+ * Glass. Surfaces are translucent layers over a faintly lit ground, so blur has something
+ * to refract. Depth comes from three things only: a hairline top highlight, a soft outer
+ * shadow, and the blur itself — never from borders alone.
+ */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.045);
+  --glass-bg-strong: rgba(24, 24, 28, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.10);
+  --glass-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+  --select: #FF2A93;
+}
+
+html, body {
+  background: var(--bg-1);
+  color: var(--fg-1);
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  /* Two faint lights for the glass to catch: brand pink top-left, cool blue bottom-right. */
+  background-image:
+    radial-gradient(1200px 700px at -10% -10%, rgba(236, 11, 122, 0.10), transparent 60%),
+    radial-gradient(1000px 700px at 110% 110%, rgba(96, 165, 250, 0.08), transparent 60%);
+  background-attachment: fixed;
+}
+
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--glass-shadow);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+}
+.glass-strong {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--glass-shadow);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+}
+.glass-flat {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+.pill {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 160ms ease-out, border-color 160ms ease-out, transform 160ms ease-out;
+}
+.pill:hover { background: rgba(255, 255, 255, 0.10); }
+.pill:active { transform: scale(0.97); }
+.pill-accent {
+  background: var(--accent);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 0 0 1px rgba(236, 11, 122, 0.35), 0 8px 28px rgba(236, 11, 122, 0.35);
+}
+.pill-accent:hover { background: var(--accent-hover); }
+.hairline { border-color: var(--glass-border); }
+.tabular { font-variant-numeric: tabular-nums; }
+@keyframes rise { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+.rise { animation: rise 180ms ease-out; }
+body {
+  font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+::selection { background: var(--accent-soft); }
+
+/* Scrollbars that don't shout on a dark ground. */
+* { scrollbar-width: thin; scrollbar-color: var(--bg-4) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 99px; border: 3px solid transparent; background-clip: content-box; }
+
+@keyframes pulse-accent { 0%,100% { opacity: 1 } 50% { opacity: .45 } }
+.pulsing { animation: pulse-accent 1.4s ease-in-out infinite; }

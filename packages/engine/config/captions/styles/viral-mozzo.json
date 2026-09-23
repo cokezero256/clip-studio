@@ -1,0 +1,48 @@
+{
+  "id": "viral-mozzo",
+  "name": "Viral (Helvetica + Vartigo + Serif)",
+  "font_family": "Helvetica",
+  "font_file": "Helvetica.ttc",
+  "font_size_px": 72,
+  "bold": true,
+  "primary_color": "#F5F5F5",
+  "highlight_color": "#F5F5F5",
+  "outline_color": "#000000",
+  "outline_width_px": 0,
+  "shadow": null,
+  "case": "as-spoken",
+  "y_offset_pct": 0.60,
+  "animation": "reveal",
+  "anchor": "bottom",
+  "stack_enabled": true,
+  "line_spacing_px": 14,
+  "variants": {
+    "accent": {
+      "font_family": "Vartigo",
+      "font_file": "Vartigo.otf",
+      "color": "#F5F5F5",
+      "size_px": 150,
+      "italic": false,
+      "bold": false,
+      "outline_width_px": 0
+    },
+    "script": {
+      "font_family": "Vartigo",
+      "font_file": "Vartigo.otf",
+      "color": "#F5F5F5",
+      "size_px": 150,
+      "italic": false,
+      "bold": false,
+      "outline_width_px": 0
+    },
+    "large": {
+      "font_family": "DM Serif Display",
+      "font_file": "DMSerifDisplay-Regular.ttf",
+      "color": "#F5F5F5",
+      "size_multiplier": 1.7,
+      "italic": false,
+      "bold": false,
+      "outline_width_px": 0
+    }
+  }
+}

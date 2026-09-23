@@ -1,0 +1,20 @@
+{
+  "id": "layout-3",
+  "name": "16:9 Single",
+  "aspect": "16:9",
+  "composition": "single",
+  "canvas": { "width": 1920, "height": 1080 },
+  "background": "#000000",
+  "bands": {
+    "header": { "y": 0, "height": 140 },
+    "aRoll":  { "y": 140, "height": 800 },
+    "footer": { "y": 940, "height": 140 }
+  },
+  "camera": {
+    "scale": "1920:-2",
+    "crop": { "w": 1920, "h": 800 },
+    "y": 140
+  },
+  "title":   { "an": 7, "x": 80, "y": 40, "fontSize": 52, "bord": 3, "shad": 1 },
+  "caption": { "an": 2, "x": 960, "y": 880, "fontSize": 64, "bord": 5 }
+}

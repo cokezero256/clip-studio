@@ -1,0 +1,25 @@
+{
+  "id": "layout-2",
+  "name": "9:16 Split",
+  "aspect": "9:16",
+  "composition": "split",
+  "canvas": { "width": 1080, "height": 1920 },
+  "background": "#000000",
+  "bands": {
+    "header":     { "y": 0, "height": 340 },
+    "aRoll":      { "y": 340, "height": 720 },
+    "captionGap": { "y": 1060, "height": 120 },
+    "bRoll":      { "y": 1180, "height": 740 }
+  },
+  "camera": {
+    "scale": "-2:720",
+    "crop": { "w": 1080, "h": 720 },
+    "y": 340
+  },
+  "screen": {
+    "fit": { "w": 1080, "h": 740 },
+    "y": 1180
+  },
+  "title":   { "an": 8, "x": 540, "y": 215, "fontSize": 54, "bord": 4, "shad": 2 },
+  "caption": { "an": 2, "x": 540, "y": 1150, "fontSize": 52, "bord": 6 }
+}

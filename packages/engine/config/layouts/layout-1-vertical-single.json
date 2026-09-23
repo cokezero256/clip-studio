@@ -1,0 +1,18 @@
+{
+  "id": "layout-1",
+  "name": "9:16 Single",
+  "aspect": "9:16",
+  "composition": "single",
+  "canvas": { "width": 1080, "height": 1920 },
+  "background": "#000000",
+  "_note": "Talking-head reels (matches the POV reference): full landscape video shown LETTERBOXED at full width (not cropped), pinned below a black title band. Black fills below where the IG/TikTok UI sits. Title in the top band, caption overlaid on the lower part of the video.",
+  "bands": {
+    "header": { "y": 0, "height": 470 }
+  },
+  "camera": {
+    "fit": "width",
+    "y": 470
+  },
+  "title":   { "an": 8, "x": 540, "y": 235, "fontSize": 58, "bord": 4, "shad": 2 },
+  "caption": { "an": 2, "x": 540, "y": 1040, "fontSize": 56, "bord": 6 }
+}

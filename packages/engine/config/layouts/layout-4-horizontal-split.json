@@ -1,0 +1,27 @@
+{
+  "id": "layout-4",
+  "name": "16:9 Split",
+  "aspect": "16:9",
+  "composition": "split",
+  "canvas": { "width": 1920, "height": 1080 },
+  "background": "#000000",
+  "_note": "Pragmatic build: screen content fills the content area; talking head is a circular PIP bottom-right. Auto stat-blocks / decorative rings from the full spec require a separate slide generator and are out of scope for clip rendering.",
+  "bands": {
+    "topMargin": { "y": 0, "height": 90 },
+    "content":   { "y": 90, "height": 910 },
+    "footer":    { "y": 1000, "height": 80 }
+  },
+  "screen": {
+    "fit": { "w": 1920, "h": 1080 },
+    "y": 0,
+    "cover": true
+  },
+  "floatingHead": {
+    "diameter": 280,
+    "centerX": 1740,
+    "centerY": 870,
+    "borderWidth": 0
+  },
+  "title":   { "an": 7, "x": 80, "y": 28, "fontSize": 44, "bord": 3, "shad": 1 },
+  "caption": { "an": 2, "x": 760, "y": 940, "fontSize": 48, "bord": 5 }
+}
