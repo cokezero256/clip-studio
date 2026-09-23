@@ -79,7 +79,8 @@ export default function Timeline(props: {
   // Dead air: pauses longer than the limit that are still inside kept footage (edited time).
   const deadAir = useMemo(() => {
     const out: Array<{ out0: number; out1: number }> = [];
-    for (const b of bl) for (const p of props.pauses) {
+    const pauses = Array.isArray(props.pauses) ? props.pauses : [];
+    for (const b of bl) for (const p of pauses) {
       const a = Math.max(p.start, b.a), z = Math.min(p.end, b.b);
       if (z - a > props.maxPause) out.push({ out0: b.outStart + (a - b.a), out1: b.outStart + (z - b.a) });
     }

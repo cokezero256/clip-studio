@@ -69,6 +69,12 @@ async function runYtdlp(baseArgs, { onLine, verify, preferQuality = false } = {}
       preferredStrategy = strat.name;
       return strat.name;
     } catch (err) {
+      // No binary at all: trying four more extractor clients cannot help. Say what to do.
+      if (err && (err.code === 'ENOENT' || /spawn .*ENOENT/.test(String(err.message)))) {
+        const hint = process.platform === 'darwin' ? 'brew install yt-dlp'
+          : process.platform === 'win32' ? 'winget install yt-dlp  (or: pip install yt-dlp)' : 'pip install yt-dlp';
+        throw new Error(`yt-dlp is not installed on this machine (looked for "${YTDLP_BIN}"). Install it — ${hint} — then restart the worker. Local files still work without it.`);
+      }
       errors.push(`${strat.name}: ${String(err.message).split('\n').pop().slice(0, 160)}`);
     }
   }

@@ -11,9 +11,17 @@ npm install
 cp .env.example .env        # then fill in the API keys
 ```
 
-Needs Node 22+, ffmpeg comes vendored (`ffmpeg-static`, the one with libass), and the
-Xcode command-line tools for the two small Swift helpers (`swiftc`; the title renderer
-rebuilds itself from `packages/engine/bin/src`). `data/` is created on first run and is never
+**Prerequisites** (the dashboard tells you which one is missing):
+
+| Tool | Why | macOS | Windows / Linux |
+|---|---|---|---|
+| Node 22+ | everything | `brew install node` | nodejs.org |
+| `yt-dlp` | downloading links | `brew install yt-dlp` | `winget install yt-dlp` / `pip install yt-dlp` |
+| `whisper-cli` | transcription | `brew install whisper-cpp` | whisper.cpp release binary on PATH, or `WHISPER_BIN` |
+| whisper model | transcription | `curl -L --create-dirs -o ~/.cache/whisper-models/ggml-large-v3-turbo-q5_0.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin` | same path, or `WHISPER_MODEL` |
+| Xcode CLT | the title renderer + pane OCR (Swift/CoreText) | `xcode-select --install` | **not available — titles render on macOS only for now** |
+
+ffmpeg comes vendored (`ffmpeg-static`, the build with libass). `data/` is created on first run and is never
 committed — sources, proxies, renders and the SQLite database live there per machine. The
 caption fonts ship in the repo (`packages/engine/config/captions/fonts`); Sequel Sans is a
 licensed font — keep the repo private.
@@ -36,6 +44,16 @@ npm run dev          # http://localhost:3040
 Both must be running. If the worker is down, jobs queue up and simply never start.
 
 ## What it does today
+
+**While a stream processes** the dashboard shows what it is doing — stage, whisper's live
+percentage with the audio length, elapsed time, a Cancel — for anyone looking, not only the
+tab that pasted the link. Budget about a minute per 15 minutes of footage.
+
+**Deleting a stream.** Hover a source card → the trash icon → confirm. It removes the clips,
+renders, tags, jobs and the stream's media folder (`data/media/sources/<key>/`, typically
+1–3 GB). A stream that is still processing is asked to stop first and shows "deleting…";
+the worker finishes the deletion the moment its job ends. `DELETE /api/sources/:id`.
+
 
 Paste a YouTube / livestream / Instagram link (or a local file path) → the worker
 downloads it, transcribes locally with whisper.cpp, finds candidate clips, removes the
@@ -165,6 +183,13 @@ moves during a session, so one detection per source framed the wrong corner.
 The preview and the export read the same composition document (`clip.edit_json`, see
 `packages/engine/src/edit/doc.js`): the title in the preview IS the PNG the export
 overlays, and the caption events are computed by the same code (`captions/phrases.js`).
+
+### Two lanes
+
+The worker runs two lanes in one process: a **fast lane** for what the editor waits on
+(preview proxies, exports, pane detection, title reads) and a **slow lane** for streams and
+the outlier corpus. A ten-minute transcription never blocks an export. `Ctrl-C` / `SIGTERM`
+drains: no new jobs, running ones finish; a second signal cancels them.
 
 ### Worker restart rule
 

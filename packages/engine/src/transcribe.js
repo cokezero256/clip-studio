@@ -116,6 +116,9 @@ async function transcribe(audioPath, { model = DEFAULT_MODEL, language = 'en', t
     '--output-json',
     '--output-json-full',
     '--no-prints',
+    // Progress lines on stderr (`progress = 42%`) — without this flag whisper says nothing
+    // for the whole run and a two-hour stream looked frozen at "0%".
+    '--print-progress',
     '-of', outPrefix,
   ], { onProgress });
 

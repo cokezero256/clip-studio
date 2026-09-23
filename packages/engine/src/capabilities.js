@@ -73,6 +73,57 @@ function checkFfmpeg(bin = resolveRenderFfmpeg()) {
   };
 }
 
+/**
+ * The two external tools and the model the pipeline needs beyond ffmpeg. A fresh clone on
+ * another machine produced "spawn yt-dlp ENOENT" five times in the job log and nothing else;
+ * this says which tool is missing and how to install it on THIS platform.
+ */
+const fs = require('fs');
+const os = require('os');
+
+const HINTS = {
+  darwin: {
+    ytdlp: 'brew install yt-dlp',
+    whisper: 'brew install whisper-cpp',
+  },
+  win32: {
+    ytdlp: 'winget install yt-dlp   (or: pip install yt-dlp)',
+    whisper: 'download whisper-cli.exe from github.com/ggml-org/whisper.cpp/releases and put it on PATH (or set WHISPER_BIN)',
+  },
+  linux: {
+    ytdlp: 'pip install yt-dlp   (or your package manager)',
+    whisper: 'build whisper.cpp (github.com/ggml-org/whisper.cpp) and put whisper-cli on PATH (or set WHISPER_BIN)',
+  },
+};
+const modelHint = (model) =>
+  `curl -L --create-dirs -o "${model}" https://huggingface.co/ggerganov/whisper.cpp/resolve/main/${path.basename(model)}`;
+
+function onPath(bin) {
+  try {
+    execFileSync(bin, ['--version'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 15000 });
+    return true;
+  } catch (err) {
+    // A binary that exists but dislikes --version still counts; only "not found" is missing.
+    return !(err && (err.code === 'ENOENT' || /ENOENT|not found/i.test(String(err.message))));
+  }
+}
+
+function checkTools() {
+  const platform = process.platform;
+  const hints = HINTS[platform] || HINTS.linux;
+  const ytdlpBin = process.env.YTDLP_BIN || 'yt-dlp';
+  const whisperBin = process.env.WHISPER_BIN || 'whisper-cli';
+  const model = process.env.WHISPER_MODEL
+    || path.join(os.homedir(), '.cache', 'whisper-models', 'ggml-large-v3-turbo-q5_0.bin');
+  return {
+    platform,
+    ytdlp: { bin: ytdlpBin, ok: onPath(ytdlpBin), hint: hints.ytdlp, what: 'downloading YouTube / Instagram links (local files still work)' },
+    whisper: { bin: whisperBin, ok: onPath(whisperBin), hint: hints.whisper, what: 'transcription — nothing works without it' },
+    model: { path: model, ok: fs.existsSync(model), hint: modelHint(model), what: 'the whisper model file' },
+    titlePlate: { ok: platform === 'darwin', what: 'titles are drawn by a Swift/CoreText helper — macOS only for now' },
+  };
+}
+
 /** Call once at worker startup. Fails loudly and says exactly how to fix it. */
 function assertCapabilities({ bin, verbose = false } = {}) {
   const r = checkFfmpeg(bin);
@@ -89,7 +140,15 @@ function assertCapabilities({ bin, verbose = false } = {}) {
   if (verbose) {
     console.log(`[capabilities] ffmpeg ok: ${r.bin}${r.videotoolbox ? ' (videotoolbox)' : ' (software encode)'}`);
   }
-  return r;
+  const tools = checkTools();
+  for (const key of ['whisper', 'model']) {
+    if (!tools[key].ok) {
+      throw new Error(`${key === 'model' ? 'whisper model' : 'whisper-cli'} not found (${tools[key].path || tools[key].bin}) — it is ${tools[key].what}.\n  Install: ${tools[key].hint}`);
+    }
+  }
+  if (!tools.ytdlp.ok) console.warn(`[capabilities] WARNING: yt-dlp not found — ${tools.ytdlp.what}. Install: ${tools.ytdlp.hint}`);
+  if (!tools.titlePlate.ok) console.warn(`[capabilities] WARNING: ${tools.titlePlate.what}`);
+  return { ...r, tools };
 }
 
-module.exports = { assertCapabilities, checkFfmpeg, resolveRenderFfmpeg, REQUIRED_FILTERS };
+module.exports = { assertCapabilities, checkFfmpeg, checkTools, resolveRenderFfmpeg, REQUIRED_FILTERS };

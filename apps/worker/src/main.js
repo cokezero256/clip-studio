@@ -30,7 +30,18 @@ const LEASE_S = 60;
 const DATA_DIR = path.resolve(__dirname, '..', '..', '..', 'data');
 
 let shuttingDown = false;
-let activeJob = null;
+/**
+ * Two lanes, one process. Everything the editor waits on (a preview proxy, an export, pane
+ * detection) is seconds of work; a stream is ten minutes of whisper. With one queue the
+ * editor sat behind the stream — measured: four editor jobs waiting on one transcription.
+ * The fast lane never touches a `process` job, the slow lane never touches an editor job,
+ * so both make progress; ffmpeg and whisper side by side are fine on this machine.
+ */
+const LANES = {
+  fast: ['proxy', 'render-clip', 'locate-panes', 'read-titles'],
+  slow: ['process', 'outliers', 'reclassify', 'classify-pending', 'transcribe-outliers'],
+};
+const activeJobs = new Map();   // lane → job id
 
 /**
  * Singleton guard.
@@ -67,6 +78,7 @@ function acquireLock() {
   // bit repeatedly). The lock itself stays a bare pid: existing code parses it as one.
   fs.writeFileSync(path.join(DATA_DIR, 'worker.status.json'), JSON.stringify({
     pid: process.pid, startedAt: new Date().toISOString(), host: os.hostname(),
+    capabilities: (() => { try { return require('@clip-studio/engine/src/capabilities').checkTools(); } catch { return null; } })(),
   }));
   const release = () => { try { if (fs.readFileSync(lockPath, 'utf-8').trim() === String(process.pid)) fs.unlinkSync(lockPath); } catch {} };
   process.on('exit', release);
@@ -604,9 +616,19 @@ async function runJob(job) {
       level: 'error',
     });
     db.finishJob(job.id, cancelled ? 'cancelled' : 'failed', err.message.slice(0, 2000));
-    if (job.source_id) db.updateSource(job.source_id, { status: cancelled ? 'pending' : 'failed' });
+    const src = job.source_id ? db.getSource(job.source_id) : null;
+    if (src && src.status !== 'deleting') db.updateSource(job.source_id, { status: cancelled ? 'pending' : 'failed' });
   } finally {
     clearInterval(heartbeat);
+    // The dashboard deleted this source while its job was running: the route could only
+    // cancel and mark it, because the files are ours. Finish the deletion now.
+    const src = job.source_id ? db.getSource(job.source_id) : null;
+    if (src && src.status === 'deleting') {
+      try {
+        const r = db.deleteSource(src.id);
+        console.log(`[worker] deleted source ${src.id} after its job ended (${r ? Math.round(r.bytes / 1e6) : 0} MB)`);
+      } catch (e) { console.warn(`[worker] could not finish deleting ${src.id}: ${e.message}`); }
+    }
   }
 }
 
@@ -642,6 +664,27 @@ function maybeScheduleRefresh() {
   console.log(`[worker] corpus is ${ageDays === Infinity ? 'unbuilt' : Math.round(ageDays) + 'd old'} — queued weekly refresh ${id}`);
 }
 
+async function lane(name, types) {
+  let lastRefreshCheck = 0;
+  while (!shuttingDown) {
+    // The corpus refresh check rides on the slow lane, hourly — it is cheap but needn't run 3600x/hr.
+    if (name === 'slow' && Date.now() - lastRefreshCheck > 3600_000) {
+      lastRefreshCheck = Date.now();
+      try { maybeScheduleRefresh(); } catch (err) { console.warn('[worker] refresh check failed:', err.message); }
+    }
+    const job = db.claimJob(OWNER, LEASE_S, types);
+    if (!job) {
+      await new Promise((r) => setTimeout(r, POLL_MS));
+      continue;
+    }
+    activeJobs.set(name, job.id);
+    console.log(`[worker:${name}] claimed ${job.id} (${job.type})`);
+    await runJob(job);
+    console.log(`[worker:${name}] finished ${job.id}`);
+    activeJobs.delete(name);
+  }
+}
+
 async function loop() {
   acquireLock();
   // Bookkeeping can lie; the disk cannot. Re-derive media_state from the files on start.
@@ -649,7 +692,7 @@ async function loop() {
     const r = db.repairMediaState();
     if (r.checked) console.log(`[worker] media state repaired from disk: ${r.downloaded} downloaded, ${r.gone} missing (of ${r.checked})`);
   } catch (e) { console.warn(`[worker] media state repair skipped: ${e.message}`); }
-  console.log(`[worker] ${OWNER} started — handles: process, outliers, reclassify, classify-pending, transcribe-outliers, read-titles, render-clip, proxy, locate-panes`);
+  console.log(`[worker] ${OWNER} started — fast lane: ${LANES.fast.join(', ')} · slow lane: ${LANES.slow.join(', ')}`);
   const reaped = db.reapStaleJobs();
   if (reaped) console.log(`[worker] requeued ${reaped} stale job(s) from a previous run`);
 
@@ -660,37 +703,31 @@ async function loop() {
     process.exit(1);
   }
 
-  let lastRefreshCheck = 0;
-  while (!shuttingDown) {
-    // Check hourly rather than every tick — this is a cheap query but it needn't run 3600x/hr.
-    if (Date.now() - lastRefreshCheck > 3600_000) {
-      lastRefreshCheck = Date.now();
-      try { maybeScheduleRefresh(); } catch (err) { console.warn('[worker] refresh check failed:', err.message); }
-    }
-
-    const job = db.claimJob(OWNER, LEASE_S);
-    if (!job) {
-      await new Promise((r) => setTimeout(r, POLL_MS));
-      continue;
-    }
-    activeJob = job.id;
-    console.log(`[worker] claimed ${job.id} (${job.type})`);
-    await runJob(job);
-    console.log(`[worker] finished ${job.id}`);
-    activeJob = null;
-  }
+  await Promise.all([lane('fast', LANES.fast), lane('slow', LANES.slow)]);
   console.log('[worker] stopped');
   // Leave explicitly: an LLM client's keep-alive sockets can hold the event loop open for
   // minutes after the loop ends, and the lock is only released on 'exit'.
   process.exit(0);
 }
 
+/**
+ * Shutdown is a drain: the first signal stops claiming and lets running jobs FINISH (a
+ * restart must not throw away ten minutes of transcription); a second signal cancels the
+ * running jobs at their next stage boundary; a third leaves immediately.
+ */
+let signals = 0;
 for (const sig of ['SIGINT', 'SIGTERM']) {
   process.on(sig, () => {
-    if (shuttingDown) process.exit(1);
+    signals++;
+    if (signals >= 3) process.exit(1);
+    if (signals === 2) {
+      console.log(`\n[worker] ${sig} again — cancelling ${activeJobs.size} running job(s)`);
+      for (const id of activeJobs.values()) db.requestCancel(id);
+      return;
+    }
     shuttingDown = true;
-    console.log(`\n[worker] ${sig} — finishing current job then exiting`);
-    if (activeJob) db.requestCancel(activeJob);
+    const n = activeJobs.size;
+    console.log(`\n[worker] ${sig} — no new jobs; ${n ? `finishing ${n} running job(s) first` : 'nothing running'} (send again to cancel)`);
   });
 }
 

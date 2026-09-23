@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { workerStatus } from '@/lib/editor';
 
 export async function GET() {
-  return NextResponse.json({ sources: db.listSources(), jobs: db.listJobs(12) });
+  return NextResponse.json({ sources: db.listSources(), jobs: db.listJobs(12), worker: workerStatus() });
 }
 
 /** Queue a job. The web process does no work itself — the worker picks this up. */

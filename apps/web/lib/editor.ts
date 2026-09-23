@@ -197,9 +197,10 @@ export function workerStatus() {
   const lockPath = path.join(DATA_ROOT, 'worker.lock');
   let pid: number | null = null;
   let startedAt: string | null = null;
+  let capabilities: Record<string, { ok: boolean; hint?: string; what?: string; bin?: string; path?: string }> | null = null;
   try {
     const st = JSON.parse(fs.readFileSync(statusPath, 'utf-8'));
-    pid = st.pid; startedAt = st.startedAt;
+    pid = st.pid; startedAt = st.startedAt; capabilities = st.capabilities ?? null;
   } catch {
     try { pid = parseInt(fs.readFileSync(lockPath, 'utf-8').trim(), 10); } catch { /* none */ }
   }
@@ -214,7 +215,12 @@ export function workerStatus() {
     ];
     stale = roots.some((r) => newestMtime(r) > started + 2000);
   }
-  return { alive, pid, startedAt, stale };
+  // Tools the worker found missing on ITS machine (yt-dlp, whisper, the model, the title helper).
+  const missing = capabilities
+    ? Object.entries(capabilities).filter(([k, v]) => k !== 'platform' && v && typeof v === 'object' && v.ok === false)
+      .map(([k, v]) => ({ tool: k, hint: v.hint ?? null, what: v.what ?? null }))
+    : [];
+  return { alive, pid, startedAt, stale, missing };
 }
 
 function newestMtime(dir: string): number {

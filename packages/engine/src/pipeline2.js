@@ -36,6 +36,19 @@ const noop = () => {};
  * segment the whole clip's words and every word outside that segment clamps to 0, so they
  * all draw at once on top of each other. Exported so this stays under test.
  */
+
+/** Length of an audio file in seconds via ffprobe, or 0 when it cannot be read. */
+async function audioDurationOf(audioPath) {
+  try {
+    const { execFile } = require('child_process');
+    const ffprobe = process.env.FFPROBE_BIN || require('ffprobe-static').path;
+    return await new Promise((resolve) => {
+      execFile(ffprobe, ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nw=1:nk=1', audioPath],
+        (err, out) => resolve(err ? 0 : parseFloat(String(out).trim()) || 0));
+    });
+  } catch { return 0; }
+}
+
 function scopeTranscript(transcript, startSeconds, endSeconds) {
   if (!transcript) return transcript;
   return {
@@ -276,8 +289,18 @@ async function run(input, {
   const outputDir = src.outDir;
 
   // 2 — transcript (starts while the video is still downloading)
-  onProgress({ stage: 'transcribe', message: 'whisper.cpp' });
-  const transcript = await transcribe(src.audioPath, { onProgress });
+  // Say how much audio there is, then move the bar with whisper's own percentages: the
+  // transcription is most of a stream's wait, and a bar that sits still reads as "stuck".
+  const audioSeconds = await audioDurationOf(src.audioPath);
+  const audioLabel = audioSeconds ? ` · ${Math.floor(audioSeconds / 3600) ? `${Math.floor(audioSeconds / 3600)} h ` : ''}${Math.round((audioSeconds % 3600) / 60)} min of audio` : '';
+  onProgress({ stage: 'transcribe', message: `whisper.cpp${audioLabel}`, progress: 0.2 });
+  const transcript = await transcribe(src.audioPath, {
+    onProgress: (p) => {
+      if (p && p.percent != null) {
+        onProgress({ stage: 'transcribe', message: `transcribing ${p.percent}%${audioLabel}`, progress: 0.2 + 0.5 * (p.percent / 100) });
+      } else if (p && p.stage) onProgress(p);
+    },
+  });
   const videoPath = await src.video;
 
   /**

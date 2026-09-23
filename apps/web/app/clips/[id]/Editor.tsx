@@ -136,7 +136,8 @@ function EditorLoaded({ data, reload }: { data: EditorData; reload: () => Promis
   const words = useMemo(() => applyDoc(data.words, doc), [data.words, doc]);
 
   const [selection, setSelection] = useState<Selection>(null);
-  const pauses = data.pauses;
+  // Defensive: a page loaded before the API grew `pauses` (or an older cached response) must not crash the timeline.
+  const pauses = useMemo(() => (Array.isArray(data.pauses) ? data.pauses : []), [data.pauses]);
   const [maxPause, setMaxPause] = useState(0.35);
 
   // When re-composed formats are waiting on pane detection, follow that job and refresh.

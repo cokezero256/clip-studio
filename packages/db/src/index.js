@@ -48,8 +48,12 @@ const DEFAULT_DB = null;
 
 let db = null;
 
+let openedDbPath = null;
+function getDbPath() { if (!openedDbPath) getDb(); return openedDbPath; }
+
 function getDb(dbPath) {
   dbPath = dbPath || resolveDefaultDb();
+  openedDbPath = openedDbPath || dbPath;
   if (db) return db;
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   db = new Database(dbPath);
@@ -148,6 +152,63 @@ function createSource({ input, sourceKey, clientId = null, title = null }) {
 function setClipComposition(clipId, composition) {
   getDb().prepare('UPDATE clip SET composition_json=? WHERE id=?')
     .run(composition == null ? null : JSON.stringify(composition), clipId);
+}
+
+/**
+ * Delete a source and everything that hangs off it — clips, renders, tags, jobs and their
+ * events — then its media folder on disk. Foreign keys are not enforced on this connection,
+ * so the children go explicitly. The folder is removed only if it sits under
+ * `<data>/media/sources/`, never anywhere else, however the row was edited.
+ *
+ * Returns what was removed so the UI can say so.
+ */
+function deleteSource(sourceId) {
+  const d = getDb();
+  const source = d.prepare('SELECT * FROM source WHERE id=?').get(sourceId);
+  if (!source) return null;
+  const counts = d.transaction(() => {
+    const clips = d.prepare('SELECT id FROM clip WHERE source_id=?').all(sourceId).map((r) => r.id);
+    let renders = 0;
+    for (const id of clips) {
+      renders += d.prepare('DELETE FROM render WHERE clip_id=?').run(id).changes;
+      d.prepare('DELETE FROM clip_tag WHERE clip_id=?').run(id);
+    }
+    const jobs = d.prepare('SELECT id FROM job WHERE source_id=?').all(sourceId).map((r) => r.id);
+    for (const id of jobs) d.prepare('DELETE FROM job_event WHERE job_id=?').run(id);
+    d.prepare('DELETE FROM job WHERE source_id=?').run(sourceId);
+    d.prepare('DELETE FROM clip WHERE source_id=?').run(sourceId);
+    d.prepare('DELETE FROM source WHERE id=?').run(sourceId);
+    return { clips: clips.length, renders, jobs: jobs.length };
+  })();
+  const files = removeSourceFiles(source.work_dir);
+  return { ...counts, ...files, title: source.title || source.input };
+}
+
+/** Remove a source's media folder, but only inside the sources root. */
+function removeSourceFiles(workDir) {
+  if (!workDir) return { bytes: 0, removedDir: null };
+  const root = path.resolve(path.dirname(getDbPath()), 'media', 'sources');
+  const target = path.resolve(workDir);
+  if (!target.startsWith(root + path.sep) || target === root) {
+    throw new Error(`refusing to remove ${target}: not under ${root}`);
+  }
+  let bytes = 0;
+  const walk = (p) => {
+    let st;
+    try { st = fs.lstatSync(p); } catch { return; }
+    if (st.isDirectory()) { for (const f of fs.readdirSync(p)) walk(path.join(p, f)); }
+    else bytes += st.size;
+  };
+  walk(target);
+  fs.rmSync(target, { recursive: true, force: true });
+  return { bytes, removedDir: target };
+}
+
+/** Jobs that are still queued or running for a source. */
+function activeJobsForSource(sourceId) {
+  return getDb().prepare(
+    "SELECT id, type, status FROM job WHERE source_id=? AND status IN ('queued','running')",
+  ).all(sourceId);
 }
 
 function updateSource(sourceId, fields) {
@@ -299,12 +360,15 @@ function enqueue({ type, payload, sourceId = null }) {
  * Atomic claim. An IMMEDIATE transaction means two workers cannot take the same row —
  * the second blocks on the write lock and then sees status='running'.
  */
-function claimJob(owner, leaseSeconds = 60) {
+function claimJob(owner, leaseSeconds = 60, types = null) {
   const d = getDb();
   const tx = d.transaction(() => {
+    // `types` lets a worker lane claim only its kinds of job (see the worker's two lanes).
+    const typeFilter = Array.isArray(types) && types.length
+      ? ` AND type IN (${types.map(() => '?').join(',')})` : '';
     const row = d.prepare(`SELECT * FROM job
-      WHERE status='queued' OR (status='running' AND lease_until < ?)
-      ORDER BY created_at LIMIT 1`).get(now());
+      WHERE (status='queued' OR (status='running' AND lease_until < ?))${typeFilter}
+      ORDER BY created_at LIMIT 1`).get(now(), ...(typeFilter ? types : []));
     if (!row) return null;
     const until = new Date(Date.now() + leaseSeconds * 1000).toISOString();
     d.prepare(`UPDATE job SET status='running', lease_owner=?, lease_until=?,
@@ -685,7 +749,7 @@ module.exports = {
   groundingCorpus, layoutCounts, repairMediaState,
   getDb, id,
   upsertClient, listClients,
-  createSource, updateSource, getSource, listSources,
+  createSource, updateSource, getSource, listSources, deleteSource, removeSourceFiles, activeJobsForSource,
   replaceClips, mergeClips, listClips, getClip, setClipComposition,
   addRender, listRenders,
   enqueue, claimJob, renewLease, finishJob, requestCancel, getJob, listJobs, reapStaleJobs,
